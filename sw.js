@@ -1,6 +1,6 @@
 const CACHE = 'lody-v1';
 const FILES = [
-  '/lodybracelet.html',
+  '/index.html',
   '/product.html',
   '/manifest.json'
 ];

@@ -2,7 +2,7 @@
   "name": "lodybracelets",
   "short_name": "lody",
   "description": "براسليات يدوية فاخرة",
-  "start_url": "/lodybracelet.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#FAF7F4",
   "theme_color": "#C4895A",
