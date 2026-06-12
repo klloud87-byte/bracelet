@@ -1433,7 +1433,7 @@ async function renderOrders() {
         .from('orders').update({ status: newStatus }).eq('id', orderId);
       if (error) { showToast('❌ فشل تحديث الحالة', 'err'); return; }
       showToast('✓ تم تحديث حالة الطلب', 'ok');
-      const order = orders.find(o => o.id === orderId);
+const order = orders.find(o => String(o.id) === String(orderId));
       if (order) { order.status = newStatus; showWhatsAppPopup(order, newStatus); }
     });
   });
@@ -1626,8 +1626,9 @@ function showWhatsAppPopup(order, newStatus) {
   const msg = statusMessages[newStatus];
   if (!msg) return; // لا نافذة لحالة "جديد"
 
-  const phone = order.phone?.replace(/[^0-9]/g, '');
-  if (!phone) { showToast('⚠️ لا يوجد رقم هاتف لهذا الطلب'); return; }
+let phone = order.phone?.replace(/[^0-9]/g, '') || '';
+if (phone.startsWith('0')) phone = '213' + phone.slice(1);
+if (!phone.startsWith('213')) phone = '213' + phone;  if (!phone) { showToast('⚠️ لا يوجد رقم هاتف لهذا الطلب'); return; }
 
   const waNumber = document.getElementById('waNumber')?.value || '213556486243';
   const encodedMsg = encodeURIComponent(msg);
