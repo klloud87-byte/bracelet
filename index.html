@@ -1763,59 +1763,77 @@
         </div>
     </section>
 
-    <section class="about-section" id="about">
-        <div class="container about-grid">
-            <div class="about-content animate-slide-right">
-                <div class="section-eyebrow" style="display:flex; flex-direction:row; justify-content:flex-start; text-align:right;">قصتنا</div>
-                <span class="about-subtitle">شغف بالتفاصيل وحبّ للأناقة</span>
-                <h2 class="about-title">صناعة الحب<br><em>بين الأصالة والرقي</em></h2>
-                <div class="about-desc-pair">
-                    <p class="about-desc">بدأت Lody Bracelets من حلم بسيط: أن نصنع قطعًا تحمل معنى وتعكس شخصية كل امرأة. كل أسورة نصنعها هي مزيج من الحرفية اليدوية الدقيقة والخامات المختارة بعناية.</p>
-                    <p class="about-desc">نؤمن أن الإكسسوار ليس مجرد زينة، بل تعبير عن الذات. لذلك نهتم بأدق التفاصيل لنضمن لكِ قطعة تدوم وتبهر.</p>
-                </div>
-                <div class="about-features">
-                    <div class="about-feature">
-                        <div class="about-feature-icon"><i class="fas fa-hand-sparkles"></i></div>
-                        <div class="about-feature-body">
-                            <div class="about-feature-label">Handcrafted</div>
-                            <div class="about-feature-text">كل قطعة مصنوعة يدوياً بعناية فائقة</div>
-                        </div>
-                    </div>
-                    <div class="about-feature">
-                        <div class="about-feature-icon"><i class="fas fa-gem"></i></div>
-                        <div class="about-feature-body">
-                            <div class="about-feature-label">Premium Materials</div>
-                            <div class="about-feature-text">خامات مختارة بأعلى معايير الجودة</div>
-                        </div>
-                    </div>
-                    <div class="about-feature">
-                        <div class="about-feature-icon"><i class="fas fa-heart"></i></div>
-                        <div class="about-feature-body">
-                            <div class="about-feature-label">Exclusive Design</div>
-                            <div class="about-feature-text">تصاميم حصرية تعكس شخصيتك</div>
-                        </div>
-                    </div>
-                </div>
-                <a href="https://wa.me/213556486243" class="btn-primary">
-                    <i class="fab fa-whatsapp"></i>
-                    <span>تواصل معنا</span>
-                </a>
-            </div>
-            <div class="about-visual animate-scale delay-2">
-                <div class="about-visual-main">
-                    <img src="images/bracelet-left.jpg" alt="Bracelet" onerror="this.classList.add('errored');">
-                    <div class="about-img-fallback">
-                        <i class="fas fa-gem" style="font-size: 3rem;"></i>
-                        <span>lodybracelets</span>
-                    </div>
-                </div>
-                <div class="about-visual-accent">
-                    <img src="images/bracelet-left1.jpg" alt="Bracelet detail" onerror="this.classList.add('errored');">
-                </div>
-            </div>
+   <section id="about" style="padding:0">
+<style>
+.aw{background:linear-gradient(135deg,#6B3A22 0%,#4A2210 100%);padding:64px 24px;font-family:'Cairo',sans-serif;direction:rtl;position:relative;overflow:hidden;}
+.aw-hdr{text-align:center;margin-bottom:40px;position:relative;z-index:1}
+.aw-eye{font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#E2AA7A;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px}
+.aw-eye::before,.aw-eye::after{content:'';width:32px;height:1px;background:#E2AA7A;opacity:0.5}
+.aw-ttl{font-family:'Amiri',serif;font-size:28px;font-weight:700;color:#FDF8F4;line-height:1.3;margin-bottom:10px}
+.aw-ttl em{color:#E2AA7A;font-style:italic}
+.aw-sub{font-size:13px;color:rgba(253,240,228,0.7);max-width:420px;margin:0 auto;line-height:1.85}
+.aw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;position:relative;z-index:1;max-width:900px;margin:0 auto}
+.aw-card{border-radius:18px;overflow:hidden;background:rgba(255,255,255,0.07);border:1px solid rgba(226,170,122,0.22);transition:all 0.3s}
+.aw-card:hover{transform:translateY(-5px);border-color:rgba(226,170,122,0.5)}
+.aw-img-wrap{width:100%;aspect-ratio:3/4;position:relative;overflow:hidden}
+.aw-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.5s}
+.aw-card:hover .aw-img-wrap img{transform:scale(1.05)}
+.aw-img-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(20,8,2,0.88) 0%,transparent 55%)}
+.aw-txt{position:absolute;bottom:0;left:0;right:0;padding:18px;z-index:2;text-align:center}
+.aw-en{font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#E2AA7A;margin-bottom:5px}
+.aw-ar{font-size:12px;color:rgba(255,255,255,0.9);line-height:1.6;font-weight:500}
+.aw-btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:32px;position:relative;z-index:1}
+.aw-btn-g{background:linear-gradient(135deg,#C4895A,#A06B3C);color:white;border:none;padding:12px 26px;border-radius:40px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;display:flex;align-items:center;gap:8px;text-decoration:none}
+.aw-btn-o{background:transparent;color:rgba(255,255,255,0.85);border:1px solid rgba(226,170,122,0.4);padding:12px 26px;border-radius:40px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;transition:all 0.2s;text-decoration:none;display:flex;align-items:center;gap:8px}
+.aw-btn-o:hover{border-color:#E2AA7A;color:#E2AA7A}
+@media(max-width:700px){.aw-grid{grid-template-columns:1fr}.aw-ttl{font-size:22px}.aw{padding:48px 16px}}
+</style>
+<div class="aw">
+  <div class="aw-hdr">
+    <div class="aw-eye">قصتنا</div>
+    <h2 class="aw-ttl">صناعة الحب<br><em>بين الأصالة والرقي</em></h2>
+    <p class="aw-sub">في ورشتنا الصغيرة، نُحوِّل الخيوط البسيطة إلى تحف فنية تروي قصصاً من الجمال والأصالة.</p>
+  </div>
+  <div class="aw-grid">
+    <div class="aw-card">
+      <div class="aw-img-wrap">
+        <img src="images/about-threads.jpg" alt="خيوط handcrafted">
+        <div class="aw-img-ov"></div>
+        <div class="aw-txt">
+          <div class="aw-en">Handcrafted</div>
+          <div class="aw-ar">كل قطعة مصنوعة يدوياً<br>بعناية فائقة</div>
         </div>
-    </section>
-
+      </div>
+    </div>
+    <div class="aw-card">
+      <div class="aw-img-wrap">
+        <img src="images/about-hands.jpg" alt="أيدي بالأساور">
+        <div class="aw-img-ov"></div>
+        <div class="aw-txt">
+          <div class="aw-en">Premium Materials</div>
+          <div class="aw-ar">خامات مختارة بأعلى<br>معايير الجودة</div>
+        </div>
+      </div>
+    </div>
+    <div class="aw-card">
+      <div class="aw-img-wrap">
+        <img src="images/about-making.jpg" alt="صنع الأسورة">
+        <div class="aw-img-ov"></div>
+        <div class="aw-txt">
+          <div class="aw-en">Exclusive Design</div>
+          <div class="aw-ar">تصاميم حصرية<br>تعكس شخصيتك</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="aw-btns">
+    <a href="#products" class="aw-btn-g">🛍️ تصفح التشكيلة</a>
+    <a href="https://wa.me/213556486243" target="_blank" class="aw-btn-o">
+      <i class="fab fa-whatsapp"></i> تواصلي معنا
+    </a>
+  </div>
+</div>
+</section>
     <section class="testimonials-section" id="testimonials">
     <div class="container">
         <div class="section-header animate-fade-up">
