@@ -660,19 +660,19 @@
     .search-clear:hover { color: var(--gold); }
     .products-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
     .product-card {
-        background: var(--white);
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid var(--border-soft);
+    background: linear-gradient(160deg, #FDF9F5 0%, #F8F0E8 100%);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(196, 137, 90, 0.18);
         cursor: pointer;
         position: relative;
         transition: all 0.4s var(--ease-out);
         box-shadow: var(--shadow-xs);
     }
     .product-card:hover {
-        transform: translateY(-8px);
-        box-shadow: var(--shadow-lg);
-        border-color: rgba(196, 137, 90, 0.25);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 48px rgba(196, 137, 90, 0.18), 0 4px 16px rgba(28, 20, 16, 0.08);
+    border-color: rgba(196, 137, 90, 0.5);
     }
     .product-image {
     aspect-ratio: 3/4;
@@ -683,13 +683,6 @@
     justify-content: center;
     position: relative;
     overflow: hidden;
-}
-    .product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: relative;
-    transition: transform 0.65s var(--ease-out);
 }
     .product-card:hover .product-image img { transform: scale(1.05); }
     .product-image .img-fallback {
@@ -731,7 +724,7 @@
     }
     .product-info {
         padding: 16px 16px 18px;
-        background: var(--white);
+        background: transparent;
         position: relative;
     }
     .product-info::before {
@@ -780,8 +773,9 @@
     .btn-view {
             text-decoration: none;
 
-        background: transparent;
-        border: 1px solid var(--border);
+        background: rgba(196, 137, 90, 0.08);
+    border: 1px solid rgba(196, 137, 90, 0.35);
+    color: var(--gold-deep);
         padding: 7px 14px;
         font-size: 0.64rem;
         border-radius: 40px;
@@ -1805,7 +1799,7 @@
   <div class="aw-grid">
     <div class="aw-card" id="awC1">
       <div class="aw-img-wrap">
-        <img src="images/about-hands.jpg" alt="خيوط">
+        <img src="images/about-making.jpg" alt="خيوط">
         <div class="aw-img-ov"></div>
       </div>
       <div class="aw-txt">
@@ -1816,7 +1810,7 @@
     </div>
     <div class="aw-card" id="awC2">
       <div class="aw-img-wrap">
-        <img src="images/about-making.jpg" alt="أيدي">
+        <img src="images/about-threads.jpg" alt="أيدي">
         <div class="aw-img-ov"></div>
       </div>
       <div class="aw-txt">
@@ -1827,7 +1821,7 @@
     </div>
     <div class="aw-card" id="awC3">
       <div class="aw-img-wrap">
-        <img src="images/about-threads.jpg" alt="صنع الأسورة">
+        <img src="images/about-hands.jpg" alt="صنع الأسورة">
         <div class="aw-img-ov"></div>
       </div>
       <div class="aw-txt">
