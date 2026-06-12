@@ -1614,6 +1614,95 @@ function startRealtime() {
         })
         .subscribe();
 }
+// ===== WHATSAPP STATUS POPUP =====
+function showWhatsAppPopup(order, newStatus) {
+  const statusMessages = {
+    confirmed: `مرحباً ${order.customer_name || order.name || 'زبونة'} 😊\nطلبك تم تأكيده ✅\nالمنتج: ${order.product_name || ''}\nسيتم التواصل معك قريباً.`,
+    shipped:   `مرحباً ${order.customer_name || order.name || 'زبونة'} 🚚\nطلبك في الطريق إليك!\nالمنتج: ${order.product_name || ''}\nترقبي وصوله قريباً 🎉`,
+    done:      `مرحباً ${order.customer_name || order.name || 'زبونة'} ✨\nطلبك اكتمل بنجاح!\nشكراً على ثقتك بـ lodybracelets 💕`,
+    new:       null
+  };
+
+  const msg = statusMessages[newStatus];
+  if (!msg) return; // لا نافذة لحالة "جديد"
+
+  const phone = order.phone?.replace(/[^0-9]/g, '');
+  if (!phone) { showToast('⚠️ لا يوجد رقم هاتف لهذا الطلب'); return; }
+
+  const waNumber = document.getElementById('waNumber')?.value || '213556486243';
+  const encodedMsg = encodeURIComponent(msg);
+  const waUrl = `https://wa.me/${phone}?text=${encodedMsg}`;
+
+  // إنشاء النافذة المنبثقة
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position:fixed; inset:0; background:rgba(26,26,26,0.6);
+    backdrop-filter:blur(8px); z-index:2000;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      background:var(--white); border-radius:28px; padding:32px 28px;
+      max-width:420px; width:100%; box-shadow:0 32px 80px rgba(0,0,0,0.2);
+      border:1px solid var(--border); font-family:'Inter',sans-serif;
+      animation:fadeSlide .2s ease;
+    ">
+      <div style="font-size:2rem; text-align:center; margin-bottom:12px;">💬</div>
+      <h3 style="font-family:'Cormorant Garamond',serif; font-size:1.35rem; text-align:center; margin-bottom:6px;">
+        إرسال إشعار للزبونة؟
+      </h3>
+      <p style="font-size:.78rem; color:var(--text-light); text-align:center; margin-bottom:20px;">
+        ${order.customer_name || order.name || 'زبونة'} · 📞 ${order.phone || '—'}
+      </p>
+
+      <div style="
+        background:var(--blush); border-radius:16px; padding:14px 16px;
+        font-size:.82rem; color:var(--text-mid); line-height:1.7;
+        white-space:pre-line; margin-bottom:20px; border:1px solid var(--border);
+      ">${msg}</div>
+
+      <div style="display:flex; gap:10px;">
+        <button id="waSendBtn" style="
+          flex:1; background:#25D366; color:white; border:none;
+          padding:12px; border-radius:40px; font-weight:700;
+          font-size:.88rem; cursor:pointer; font-family:'Inter',sans-serif;
+          display:flex; align-items:center; justify-content:center; gap:8px;
+          transition:all .2s;
+        ">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.55 4.1 1.508 5.826L0 24l6.335-1.652A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.372l-.36-.214-3.727.977.995-3.638-.235-.374A9.817 9.817 0 012.182 12C2.182 6.579 6.579 2.182 12 2.182c5.421 0 9.818 4.397 9.818 9.818 0 5.421-4.397 9.818-9.818 9.818z"/>
+          </svg>
+          إرسال واتساب
+        </button>
+        <button id="waSkipBtn" style="
+          flex:0.6; background:none; border:1px solid var(--border);
+          color:var(--text-mid); padding:12px; border-radius:40px;
+          font-size:.82rem; cursor:pointer; font-family:'Inter',sans-serif;
+          transition:all .2s;
+        ">تخطي</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#waSendBtn').addEventListener('click', () => {
+    window.open(waUrl, '_blank');
+    overlay.remove();
+    showToast('✓ تم فتح واتساب', 'ok');
+  });
+
+  overlay.querySelector('#waSkipBtn').addEventListener('click', () => {
+    overlay.remove();
+  });
+
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+// ===== END WHATSAPP STATUS POPUP =====
 // ===== END REALTIME NOTIFICATIONS =====
 
 async function checkSession() {
