@@ -1396,13 +1396,105 @@ async function renderOrders() {
     return; 
   }
   container.innerHTML = filtered.map(o => `<div class="order-card-admin"><div class="order-icon">📦</div><div class="order-info"><div class="order-name">${escapeHtml(o.customer_name || o.name || '—')}</div><div class="order-meta"><span>📞 ${escapeHtml(o.phone || '—')}</span><span>📍 ${escapeHtml(o.wilaya || '—')}</span>${o.quantity ? `<span>🔢 ${escapeHtml(String(o.quantity))}</span>` : ''}${o.color ? `<span>🎨 ${escapeHtml(o.color)}</span>` : ''}${o.size ? `<span>📏 ${escapeHtml(o.size)}</span>` : ''}</div>${o.product_name ? `<div class="order-product">📦 ${escapeHtml(o.product_name)}</div>` : ''}${o.notes ? `<div class="order-notes">💬 "${escapeHtml(o.notes)}"</div>` : ''}<div class="order-id-text">${escapeHtml(o.id || '')}</div></div><div class="order-right"><select class="order-status-select" data-id="${escapeHtml(o.id)}"><option value="new" ${o.status==='new'?'selected':''}>🆕 جديد</option><option value="confirmed" ${o.status==='confirmed'?'selected':''}>✅ مؤكد</option><option value="shipped" ${o.status==='shipped'?'selected':''}>🚚 تم الشحن</option><option value="done" ${o.status==='done'?'selected':''}>✨ مكتمل</option></select><div class="order-time">${formatDate(o.created_at)}</div></div></div>`).join('');
-  container.querySelectorAll('.order-status-select').forEach(sel => { 
-    sel.addEventListener('change', async () => { 
-      await supabaseClient.from('orders').update({ status: sel.value }).eq('id', sel.dataset.id); 
-      showToast('✓ تم تحديث حالة الطلب', 'ok'); 
-      await renderOrders(); 
-    }); 
+
+const STATUS_MESSAGES = {
+  confirmed: (name) => `مرحبا ${name} 👋 طلبيتك تأكدت عندنا ✅ نتواصلو معاك قريباً إن شاء الله 🌸`,
+  shipped:   (name) => `مرحبا ${name} 🚚 طلبيتك تشحنات وفي الطريق إليك! ترقبي التوصيل 📦💕`,
+  done:      (name) => `مرحبا ${name} ✨ شكراً على ثقتك فينا 💕 نتمنو تعجبك الطلبية، وأي وقت حتى راكي مرحبا 🌸`,
+};
+
+function showWhatsAppPopup(order, status) {
+  const msgFn = STATUS_MESSAGES[status];
+  if (!msgFn) return;
+
+  const name = order.customer_name || order.name || 'الزبونة';
+  const phone = (order.phone || '').replace(/\D/g, '');
+  const msg = msgFn(name);
+
+  document.getElementById('waPopup')?.remove();
+
+  if (!document.getElementById('drawerStyle')) {
+    const s = document.createElement('style');
+    s.id = 'drawerStyle';
+    s.textContent = `@keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }`;
+    document.head.appendChild(s);
+  }
+
+  const popup = document.createElement('div');
+  popup.id = 'waPopup';
+  popup.style.cssText = `
+    position:fixed;inset:0;background:rgba(26,26,26,0.55);
+    backdrop-filter:blur(8px);z-index:2000;
+    display:flex;align-items:flex-end;justify-content:center;
+  `;
+
+  popup.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 40px;
+      width:100%;max-width:500px;
+      box-shadow:0 -8px 40px rgba(0,0,0,0.15);font-family:'Inter',sans-serif;
+      animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);">
+
+      <div style="width:40px;height:4px;background:#E8E4E1;border-radius:4px;
+        margin:0 auto 20px;"></div>
+
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px;direction:rtl;">
+        📲 رسالة للزبونة
+      </div>
+      <div style="font-size:0.75rem;color:#6B6B6B;margin-bottom:16px;direction:rtl;">
+        ${name} &nbsp;·&nbsp; ${phone}
+      </div>
+
+      <textarea id="waMsg" rows="5" style="width:100%;padding:12px;
+        border:1.5px solid #E8E4E1;border-radius:12px;
+        font-family:'Inter',sans-serif;font-size:0.88rem;resize:none;
+        outline:none;direction:rtl;background:#FDFBF9;
+        box-sizing:border-box;">${msg}</textarea>
+
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <a id="waOpenBtn"
+          href="https://wa.me/${phone}?text=${encodeURIComponent(msg)}"
+          target="_blank"
+          style="flex:1;background:#25D366;color:white;padding:14px;
+          border-radius:40px;font-weight:700;font-size:0.88rem;
+          text-align:center;text-decoration:none;
+          display:flex;align-items:center;justify-content:center;gap:8px;">
+          💬 فتح واتساب
+        </a>
+        <button id="waCloseBtn"
+          style="flex:0.45;background:none;border:1.5px solid #E8E4E1;padding:14px;
+          border-radius:40px;font-weight:600;font-size:0.88rem;cursor:pointer;
+          font-family:'Inter',sans-serif;color:#6B6B6B;">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  `;
+
+  popup.querySelector('#waMsg').addEventListener('input', function() {
+    popup.querySelector('#waOpenBtn').href =
+      `https://wa.me/${phone}?text=${encodeURIComponent(this.value)}`;
   });
+
+  popup.querySelector('#waCloseBtn').addEventListener('click', () => popup.remove());
+  popup.addEventListener('click', e => { if (e.target === popup) popup.remove(); });
+
+  document.body.appendChild(popup);
+}
+
+container.querySelectorAll('.order-status-select').forEach(sel => {
+  sel.addEventListener('change', async () => {
+    const orderId = sel.dataset.id;
+    const newStatus = sel.value;
+    await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+    showToast('✓ تم تحديث حالة الطلب', 'ok');
+    const order = orders.find(o => o.id === orderId);
+    if (order) showWhatsAppPopup(order, newStatus);
+    await renderOrders();
+  });
+});
 }
 
 async function loadReviews() { const { data, error } = await supabaseClient.from('reviews').select('*').order('created_at', { ascending: false }); if (error) return []; return data || []; }
