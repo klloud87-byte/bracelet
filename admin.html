@@ -1383,69 +1383,7 @@ document.getElementById('adminProductForm').addEventListener('submit', async e =
 });
 
 async function loadOrders() { const { data, error } = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false }); if (error) return []; return data || []; }
-async function renderOrders() {
-  showAdminSkeletons('orders');
-  orders = await loadOrders();
-  const newCount = orders.filter(o => o.status === 'new').length;
-  document.getElementById('adminOrderCount').innerText = newCount;
-  
-  let filtered = orders;
-  if (activeOrderStatus !== 'all') 
-    filtered = orders.filter(o => o.status === activeOrderStatus);
-  
-  const container = document.getElementById('adminOrdersList');
-  if (!filtered.length) {
-    container.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📭</div>
-      <p>لا توجد طلبات</p>
-    </div>`;
-    return;
-  }
-
-  const statusLabels = {
-    new: '🆕 جديد', confirmed: '✅ مؤكد',
-    shipped: '🚚 تم الشحن', done: '✨ مكتمل'
-  };
-
-  container.innerHTML = filtered.map(o => `
-    <div class="order-card-admin">
-      <div class="order-icon">🛍️</div>
-      <div class="order-info">
-        <div class="order-name">${escapeHtml(o.customer_name || o.name || 'زبونة')}</div>
-        <div class="order-meta">
-          <span>📍 ${escapeHtml(o.wilaya || '—')}</span>
-          <span>📞 ${escapeHtml(o.phone || '—')}</span>
-          <span>💰 ${o.price ? o.price + ' دج' : '—'}</span>
-        </div>
-        <div class="order-product">📦 ${escapeHtml(o.product_name || '—')}</div>
-        ${o.notes ? `<div class="order-notes">💬 ${escapeHtml(o.notes)}</div>` : ''}
-        <div class="order-id-text">#${o.id}</div>
-      </div>
-      <div class="order-right">
-        <select class="order-status-select" data-id="${o.id}">
-          <option value="new"    ${o.status==='new'?'selected':''}>🆕 جديد</option>
-          <option value="confirmed" ${o.status==='confirmed'?'selected':''}>✅ مؤكد</option>
-          <option value="shipped"   ${o.status==='shipped'?'selected':''}>🚚 تم الشحن</option>
-          <option value="done"      ${o.status==='done'?'selected':''}>✨ مكتمل</option>
-        </select>
-        <div class="order-time">${formatDate(o.created_at)}</div>
-      </div>
-    </div>
-  `).join('');
-
-  // ✅ داخل الدالة — هنا صح
-  container.querySelectorAll('.order-status-select').forEach(sel => {
-    sel.addEventListener('change', async () => {
-      const orderId = sel.dataset.id;
-      const newStatus = sel.value;
-      await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
-      showToast('✓ تم تحديث حالة الطلب', 'ok');
-      const order = orders.find(o => o.id === orderId);
-      if (order) showWhatsAppPopup(order, newStatus);
-      await renderOrders();
-    });
-  });
-}
+renderOrders
 
 async function loadReviews() { const { data, error } = await supabaseClient.from('reviews').select('*').order('created_at', { ascending: false }); if (error) return []; return data || []; }
 async function deleteReview(id) { await supabaseClient.from('reviews').delete().eq('id', id); await renderReviews(); await updateStats(); showToast('✓ تم حذف التقييم', 'ok'); }
