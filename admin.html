@@ -663,12 +663,24 @@ h1, h2, h3, .admin-logo { font-family: var(--font-display); font-weight: 500; }
       <div class="admin-panel" id="adminPanelSettings">
         <div class="panel-header"><h2>🔐 الإعدادات</h2></div>
         <div class="settings-card">
-          <h3>🔑 تغيير كلمة المرور</h3>
-          <div class="form-field"><label>كلمة المرور الجديدة</label><input type="password" id="newPassword" placeholder="أدخلي كلمة المرور الجديدة"></div>
-          <div class="form-field"><label>تأكيد كلمة المرور</label><input type="password" id="confirmPassword" placeholder="أعيدي الكتابة للتأكيد"></div>
-          <button class="btn-primary-admin" id="changePasswordBtn" style="width:100%; justify-content:center;">💾 تحديث كلمة المرور</button>
-          <p id="passMsg" style="margin-top:14px; font-size:0.75rem;"></p>
-        </div>
+  <h3>🔑 تغيير كلمة المرور</h3>
+  <div class="form-field">
+    <label>كلمة المرور الحالية</label>
+    <input type="password" id="currentPassword" placeholder="أدخلي كلمة مرورك الحالية">
+  </div>
+  <div class="form-field">
+    <label>كلمة المرور الجديدة</label>
+    <input type="password" id="newPassword" placeholder="8 أحرف على الأقل">
+  </div>
+  <div class="form-field">
+    <label>تأكيد كلمة المرور الجديدة</label>
+    <input type="password" id="confirmPassword" placeholder="أعيدي كتابة كلمة المرور الجديدة">
+  </div>
+  <button class="btn-primary-admin" id="changePasswordBtn" style="width:100%; justify-content:center;">
+    💾 تحديث كلمة المرور
+  </button>
+  <p id="passMsg" style="margin-top:14px; font-size:0.75rem;"></p>
+</div>
         <div class="settings-card">
           <h3>📲 إعدادات واتساب</h3>
           <div class="form-field"><label>رقم واتساب الإدارة</label><input type="tel" id="waNumber" placeholder="213556486243" value="213556486243"></div>
@@ -973,7 +985,6 @@ function setCategoryValue(val) {
 }
 // ===== END CATEGORY FIX =====
 
-async function updateAdminPassword(newPass) { try { const { error } = await supabaseClient.from('admin_config').upsert({ key: 'admin_password', value: newPass }, { onConflict: 'key' }); return !error; } catch { return false; } }
 async function convertToWebP(file, quality = 0.85, maxSize = 1200) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -1557,8 +1568,99 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.g
 document.getElementById('searchProductsAdmin').addEventListener('input', renderProductsAdmin);
 document.getElementById('prodFilterChips').addEventListener('click', e => { const chip = e.target.closest('.chip'); if (!chip) return; activeCol = chip.dataset.col; document.querySelectorAll('#prodFilterChips .chip').forEach(c => c.classList.toggle('active', c === chip)); renderProductsAdmin(); });
 document.getElementById('orderFilterChips').addEventListener('click', e => { const chip = e.target.closest('.chip'); if (!chip) return; activeOrderStatus = chip.dataset.status; document.querySelectorAll('#orderFilterChips .chip').forEach(c => c.classList.toggle('active', c === chip)); renderOrders(); });
-document.getElementById('changePasswordBtn').addEventListener('click', async () => { const newPass = document.getElementById('newPassword').value; const confPass = document.getElementById('confirmPassword').value; const passMsg = document.getElementById('passMsg'); if (newPass.length < 4) { passMsg.innerText = '⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل'; passMsg.style.color = 'orange'; return; } if (newPass !== confPass) { passMsg.innerText = '⚠️ كلمتا المرور غير متطابقتين'; passMsg.style.color = 'orange'; return; } const ok = await updateAdminPassword(newPass); if (ok) { passMsg.innerText = '✓ تم تغيير كلمة المرور بنجاح'; passMsg.style.color = 'green'; showToast('✓ تم تغيير كلمة المرور', 'ok'); document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; } else { passMsg.innerText = '❌ فشل في تغيير كلمة المرور'; passMsg.style.color = 'red'; showToast('❌ حدث خطأ', 'err'); } setTimeout(() => passMsg.innerText = '', 4000); });
-document.getElementById('saveWaBtn').addEventListener('click', () => showToast('✓ تم حفظ رقم واتساب', 'ok'));
+document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+    const currentPass = document.getElementById('currentPassword').value;
+    const newPass = document.getElementById('newPassword').value;
+    const confPass = document.getElementById('confirmPassword').value;
+    const passMsg = document.getElementById('passMsg');
+
+    if (!currentPass) {
+        passMsg.innerText = '⚠️ أدخلي كلمة المرور الحالية أولاً';
+        passMsg.style.color = 'orange'; return;
+    }
+    if (newPass.length < 8) {
+        passMsg.innerText = '⚠️ كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل';
+        passMsg.style.color = 'orange'; return;
+    }
+    if (newPass !== confPass) {
+        passMsg.innerText = '⚠️ كلمتا المرور غير متطابقتين';
+        passMsg.style.color = 'orange'; return;
+    }
+    if (currentPass === newPass) {
+        passMsg.innerText = '⚠️ كلمة المرور الجديدة يجب أن تكون مختلفة';
+        passMsg.style.color = 'orange'; return;
+    }
+
+    passMsg.innerText = '⏳ جاري التحقق...';
+    passMsg.style.color = 'var(--text-light)';
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+        passMsg.innerText = '❌ غير مسجل الدخول';
+        passMsg.style.color = 'red'; return;
+    }
+
+    // التحقق من كلمة المرور الحالية
+    const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+        email: user.email,
+        password: currentPass
+    });
+
+    if (signInError) {
+        passMsg.innerText = '❌ كلمة المرور الحالية غير صحيحة';
+        passMsg.style.color = 'red';
+        showToast('❌ كلمة المرور الحالية خاطئة', 'err');
+        return;
+    }
+
+    // تغيير كلمة المرور
+    const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+
+    if (!error) {
+        passMsg.innerText = '✓ تم تغيير كلمة المرور بنجاح 🔐';
+        passMsg.style.color = 'green';
+        showToast('✓ تم تغيير كلمة المرور', 'ok');
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+    } else {
+        passMsg.innerText = '❌ فشل: ' + error.message;
+        passMsg.style.color = 'red';
+        showToast('❌ حدث خطأ', 'err');
+    }
+
+    setTimeout(() => passMsg.innerText = '', 4000);
+});    const newPass = document.getElementById('newPassword').value;
+    const confPass = document.getElementById('confirmPassword').value;
+    const passMsg = document.getElementById('passMsg');
+
+    if (newPass.length < 8) {
+        passMsg.innerText = '⚠️ كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+        passMsg.style.color = 'orange';
+        return;
+    }
+    if (newPass !== confPass) {
+        passMsg.innerText = '⚠️ كلمتا المرور غير متطابقتين';
+        passMsg.style.color = 'orange';
+        return;
+    }
+
+    const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+
+    if (!error) {
+        passMsg.innerText = '✓ تم تغيير كلمة المرور بنجاح';
+        passMsg.style.color = 'green';
+        showToast('✓ تم تغيير كلمة المرور', 'ok');
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+    } else {
+        passMsg.innerText = '❌ فشل: ' + error.message;
+        passMsg.style.color = 'red';
+        showToast('❌ حدث خطأ', 'err');
+    }
+
+    setTimeout(() => passMsg.innerText = '', 4000);
+});document.getElementById('saveWaBtn').addEventListener('click', () => showToast('✓ تم حفظ رقم واتساب', 'ok'));
 document.getElementById('saveStoreBtn').addEventListener('click', () => showToast('✓ تم حفظ معلومات المتجر', 'ok'));
 document.getElementById('exportProdsBtn').addEventListener('click', () => exportCSV(products, 'products.csv'));
 document.getElementById('exportOrdersBtn').addEventListener('click', () => exportCSV(orders, 'orders.csv'));
