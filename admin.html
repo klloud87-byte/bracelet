@@ -1630,37 +1630,8 @@ document.getElementById('changePasswordBtn').addEventListener('click', async () 
     }
 
     setTimeout(() => passMsg.innerText = '', 4000);
-});    const newPass = document.getElementById('newPassword').value;
-    const confPass = document.getElementById('confirmPassword').value;
-    const passMsg = document.getElementById('passMsg');
-
-    if (newPass.length < 8) {
-        passMsg.innerText = '⚠️ كلمة المرور يجب أن تكون 8 أحرف على الأقل';
-        passMsg.style.color = 'orange';
-        return;
-    }
-    if (newPass !== confPass) {
-        passMsg.innerText = '⚠️ كلمتا المرور غير متطابقتين';
-        passMsg.style.color = 'orange';
-        return;
-    }
-
-    const { error } = await supabaseClient.auth.updateUser({ password: newPass });
-
-    if (!error) {
-        passMsg.innerText = '✓ تم تغيير كلمة المرور بنجاح';
-        passMsg.style.color = 'green';
-        showToast('✓ تم تغيير كلمة المرور', 'ok');
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-    } else {
-        passMsg.innerText = '❌ فشل: ' + error.message;
-        passMsg.style.color = 'red';
-        showToast('❌ حدث خطأ', 'err');
-    }
-
-    setTimeout(() => passMsg.innerText = '', 4000);
-});document.getElementById('saveWaBtn').addEventListener('click', () => showToast('✓ تم حفظ رقم واتساب', 'ok'));
+})
+;document.getElementById('saveWaBtn').addEventListener('click', () => showToast('✓ تم حفظ رقم واتساب', 'ok'));
 document.getElementById('saveStoreBtn').addEventListener('click', () => showToast('✓ تم حفظ معلومات المتجر', 'ok'));
 document.getElementById('exportProdsBtn').addEventListener('click', () => exportCSV(products, 'products.csv'));
 document.getElementById('exportOrdersBtn').addEventListener('click', () => exportCSV(orders, 'orders.csv'));
