@@ -2396,7 +2396,13 @@ function openOrderModal(product) {
 </div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
   <div>
     <label style="display:block;font-size:.68rem;margin-bottom:8px;font-weight:700;color:var(--text-mid);letter-spacing:.08em;text-transform:uppercase;font-family:'Cairo',sans-serif;">🎨 اللون</label>
-    <input type="text" id="orderColor" required placeholder="ذهبي، فضي..." style="width:100%;padding:12px 15px;border:1.5px solid var(--border);border-radius:60px;font-family:'Cairo',sans-serif;background:var(--cream);outline:none;">
+    <div id="colorPickerWrapIdx" style="display:flex;flex-wrap:wrap;gap:10px;padding:10px;
+  background:var(--cream);border:1.5px solid var(--border);border-radius:16px;">
+</div>
+<input type="hidden" id="orderColor" required>
+<div id="colorSelectedLabelIdx" style="margin-top:7px;font-size:.75rem;
+  color:var(--gold-deep);font-family:'Cairo',sans-serif;font-weight:700;
+  min-height:18px;text-align:center;"></div>..." style="width:100%;padding:12px 15px;border:1.5px solid var(--border);border-radius:60px;font-family:'Cairo',sans-serif;background:var(--cream);outline:none;">
   </div>
   <div>
     <label style="display:block;font-size:.68rem;margin-bottom:8px;font-weight:700;color:var(--text-mid);letter-spacing:.08em;text-transform:uppercase;font-family:'Cairo',sans-serif;">📏 المقاس</label>
@@ -2411,9 +2417,41 @@ function openOrderModal(product) {
     <button type="button" class="order-qty-btn" id="orderPlus">+</button>
   </div>
 </div>
+<!-- ✅ الجديد -->
 <div style="margin-bottom:24px;">
-  <label style="display:block;font-size:.68rem;margin-bottom:8px;font-weight:700;color:var(--text-mid);letter-spacing:.08em;text-transform:uppercase;font-family:'Cairo',sans-serif;">💬 ملاحظات إضافية</label>
-  <textarea id="orderNotes" rows="2" placeholder="مثلاً: هدية لصديقتي..." style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:20px;resize:none;font-family:'Cairo',sans-serif;background:var(--cream);outline:none;"></textarea>
+  <label style="display:block;font-size:.68rem;margin-bottom:8px;font-weight:700;
+    color:var(--text-mid);letter-spacing:.08em;text-transform:uppercase;
+    font-family:'Cairo',sans-serif;">
+    🎨 تفاصيل تخصيص الطلب
+  </label>
+
+  <!-- تلميح مرئي -->
+  <div style="background:linear-gradient(135deg,#FEF9F0,#FDF3E7);
+    border:1px solid rgba(196,137,90,.25);border-radius:14px;
+    padding:11px 15px;margin-bottom:10px;
+    display:flex;align-items:flex-start;gap:10px;">
+    <span style="font-size:1.1rem;margin-top:1px;">💡</span>
+    <div>
+      <div style="font-size:.72rem;font-weight:700;color:#A06B3C;
+        font-family:'Cairo',sans-serif;margin-bottom:3px;">
+        كيف تكتبين تفاصيل طلبك؟
+      </div>
+      <div style="font-size:.68rem;color:#6B5B52;font-family:'Cairo',sans-serif;line-height:1.7;">
+        مثال: <strong>"أسوارة باللون الوردي مع زهور باللون الأزرق"</strong><br>
+        أو: <strong>"خيط ذهبي مع خرز بنفسجي وحرف A في المنتصف"</strong>
+      </div>
+    </div>
+  </div>
+
+  <textarea id="orderNotes" rows="3"
+    placeholder="اكتبي تفاصيل تخصيصك هنا... اللون الرئيسي، ألوان التفاصيل، أي نقش أو حرف تريدينه"
+    style="width:100%;padding:12px 16px;border:1.5px solid var(--border);
+      border-radius:20px;resize:none;font-family:'Cairo',sans-serif;
+      font-size:.85rem;background:var(--cream);outline:none;
+      transition:border-color .2s;line-height:1.7;"
+    onfocus="this.style.borderColor='var(--gold)'"
+    onblur="this.style.borderColor='var(--border)'">
+  </textarea>
 </div>
 <button type="submit" class="order-submit-btn">
   <i class="fab fa-whatsapp"></i> إرسال الطلب عبر واتساب
@@ -2426,6 +2464,7 @@ function openOrderModal(product) {
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     let qty = 1;
+    buildColorPickerIdx(product.colors || []);
     const qtySpan = document.getElementById('orderQty');
     document.getElementById('orderMinus').onclick = () => { if (qty > 1) { qty--; qtySpan.textContent = qty; } };
     document.getElementById('orderPlus').onclick = () => { if (qty < 20) { qty++; qtySpan.textContent = qty; } };
@@ -2652,6 +2691,43 @@ async function renderBestsellers() {
 }
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
+}
+function buildColorPickerIdx(colors) {
+    const wrap = document.getElementById('colorPickerWrapIdx');
+    const input = document.getElementById('orderColor');
+    const label = document.getElementById('colorSelectedLabelIdx');
+    if (!wrap) return;
+
+    const toShow = (colors && colors.length) ? colors : Object.keys(COLOR_MAP_ORDER);
+
+    wrap.innerHTML = toShow.map(c => {
+        const info = COLOR_MAP_ORDER[c] || { hex:'#ccc', name:c };
+        return `<div class="color-pick-btn-idx" data-color="${c}" data-name="${info.name}"
+            title="${info.name}"
+            style="width:38px;height:38px;border-radius:50%;
+            background:${info.hex};border:2.5px solid transparent;
+            cursor:pointer;position:relative;transition:all .2s;
+            box-shadow:0 2px 6px rgba(0,0,0,0.1);flex-shrink:0;"></div>`;
+    }).join('');
+
+    wrap.querySelectorAll('.color-pick-btn-idx').forEach(btn => {
+        btn.addEventListener('click', () => {
+            wrap.querySelectorAll('.color-pick-btn-idx').forEach(b => {
+                b.style.border = '2.5px solid transparent';
+                b.style.transform = 'scale(1)';
+                b.innerHTML = '';
+            });
+            btn.style.border = '2.5px solid var(--gold)';
+            btn.style.transform = 'scale(1.15)';
+            btn.style.boxShadow = '0 0 0 3px rgba(196,137,90,0.25)';
+            btn.innerHTML = `<span style="position:absolute;inset:0;display:flex;
+                align-items:center;justify-content:center;
+                font-size:.75rem;color:white;font-weight:700;
+                text-shadow:0 1px 3px rgba(0,0,0,0.5);">✓</span>`;
+            input.value = btn.dataset.name;
+            label.textContent = `✓ اخترتِ: ${btn.dataset.name}`;
+        });
+    });
 }
 </script>
 </body>

@@ -942,18 +942,34 @@ function getCategoryValue() {
   return sel || null;
 }
 
+// ✅ غيري هذه الدالة
 function setCategoryValue(val) {
-  const sel = document.getElementById('prodCollection');
-  const customInput = document.getElementById('prodCollectionCustom');
-  if (!val) { sel.value = ''; customInput.style.display = 'none'; return; }
-  if (knownCategories.includes(val)) {
-    sel.value = val;
-    customInput.style.display = 'none';
-  } else {
-    sel.value = '__other__';
-    customInput.style.display = 'block';
-    customInput.value = val;
-  }
+    const sel = document.getElementById('prodCollection');
+    const customInput = document.getElementById('prodCollectionCustom');
+    
+    if (!val || val === 'EMPTY' || val === '') { 
+        sel.value = ''; 
+        customInput.style.display = 'none'; 
+        return; 
+    }
+    
+    // تحويل القيم الإنجليزية للعربية
+    const legacyMap = {
+        'summer':'صيفي', 'gift':'هدايا', 'custom':'مخصص',
+        'classic':'كلاسيك', 'modern':'عصري', 'gold':'ذهب', 'silver':'فضة'
+    };
+    
+    const mappedVal = legacyMap[val] || val;
+    
+    if (knownCategories.includes(mappedVal)) {
+        sel.value = mappedVal;
+        customInput.style.display = 'none';
+        customInput.value = '';
+    } else {
+        sel.value = '__other__';
+        customInput.style.display = 'block';
+        customInput.value = mappedVal;
+    }
 }
 // ===== END CATEGORY FIX =====
 

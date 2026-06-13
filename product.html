@@ -461,8 +461,16 @@ body { font-family: 'Cairo', sans-serif; background: var(--cream); color: var(--
                     </select>
                 </div>
                 <div class="order-grid2 order-field">
-                    <div><label class="order-label">🎨 اللون</label><input type="text" class="order-input" id="oColor" required placeholder="ذهبي، وردي..."></div>
-                    <div><label class="order-label">📏 المقاس</label><input type="text" class="order-input" id="oSize" required placeholder="16، 18، 20سم"></div>
+<div>
+  <label class="order-label">🎨 اختاري اللون</label>
+  <div id="colorPickerWrap" style="display:flex;flex-wrap:wrap;gap:10px;padding:10px;
+    background:var(--cream);border:1.5px solid var(--border);border-radius:16px;">
+  </div>
+  <input type="hidden" id="oColor" required>
+  <div id="colorSelectedLabel" style="margin-top:7px;font-size:.75rem;
+    color:var(--gold-deep);font-family:'Cairo',sans-serif;font-weight:700;
+    min-height:18px;text-align:center;"></div>
+</div>                    <div><label class="order-label">📏 المقاس</label><input type="text" class="order-input" id="oSize" required placeholder="16، 18، 20سم"></div>
                 </div>
                 <div class="order-field"><label class="order-label">🔢 الكمية</label>
                     <div class="qty-control">
@@ -484,8 +492,31 @@ body { font-family: 'Cairo', sans-serif; background: var(--cream); color: var(--
         </label>
     </div>
 </div>
-                <div class="order-field"><label class="order-label">💬 ملاحظات</label><textarea class="order-textarea" id="oNotes" rows="2" placeholder="هدية، تخصيص خاص..."></textarea></div>
-                <button type="submit" class="btn-order-submit"><i class="fab fa-whatsapp"></i> إرسال الطلب عبر واتساب</button>
+                <!-- ✅ الجديد في product.html -->
+<div class="order-field">
+  <label class="order-label">🎨 تفاصيل تخصيص الطلب</label>
+
+  <div style="background:linear-gradient(135deg,#FEF9F0,#FDF3E7);
+    border:1px solid rgba(196,137,90,.25);border-radius:14px;
+    padding:11px 15px;margin-bottom:10px;
+    display:flex;align-items:flex-start;gap:10px;">
+    <span style="font-size:1.1rem;">💡</span>
+    <div>
+      <div style="font-size:.72rem;font-weight:700;color:#A06B3C;
+        font-family:'Cairo',sans-serif;margin-bottom:3px;">
+        كيف تكتبين تفاصيل طلبك؟
+      </div>
+      <div style="font-size:.68rem;color:#6B5B52;font-family:'Cairo',sans-serif;line-height:1.7;">
+        مثال: <strong>"أسوارة باللون الوردي مع زهور باللون الأزرق"</strong><br>
+        أو: <strong>"خيط ذهبي مع خرز بنفسجي وحرف A في المنتصف"</strong>
+      </div>
+    </div>
+  </div>
+
+  <textarea class="order-textarea" id="oNotes" rows="3"
+    placeholder="اكتبي تفاصيل تخصيصك هنا... اللون الرئيسي، ألوان التفاصيل، أي نقش أو حرف تريدينه">
+  </textarea>
+</div>                <button type="submit" class="btn-order-submit"><i class="fab fa-whatsapp"></i> إرسال الطلب عبر واتساب</button>
                 <p style="text-align:center;font-size:.6rem;color:var(--text-light);margin-top:12px;font-family:'Cairo',sans-serif;">✨ سيتم تأكيد طلبك خلال 24 ساعة</p>
             </form>
         </div>
@@ -741,6 +772,8 @@ function openOrder(product) {
     $('orderProdName').textContent = product.name;
     $('orderProdPrice').innerHTML = `${Number(product.price).toLocaleString()} <small>دج</small>`;
     orderQty = 1; $('orderQtyVal').textContent = '1';
+        buildColorPicker(product.colors || []);
+
     $('orderOverlay').classList.add('open'); document.body.style.overflow = 'hidden';
 }
 function closeOrder() { $('orderOverlay').classList.remove('open'); document.body.style.overflow = ''; }
@@ -763,8 +796,15 @@ if (orderRl.count >= 3) {
 }
 // ===== END RATE LIMIT =====
 
-if (!name||!phone||!wilaya||!color||!size) { showToast('❌ الرجاء تعبئة جميع الحقول'); return; }
-const phoneRegex = /^(05|06|07)[0-9]{8}$/;
+if (!color) { 
+    showToast('🎨 الرجاء اختيار لون أولاً');
+    document.getElementById('colorPickerWrap').style.border = '1.5px solid #C24545';
+    setTimeout(() => {
+        document.getElementById('colorPickerWrap').style.border = '1.5px solid var(--border)';
+    }, 2000);
+    return; 
+}
+if (!name||!phone||!wilaya||!size) { showToast('❌ الرجاء تعبئة جميع الحقول'); return; }const phoneRegex = /^(05|06|07)[0-9]{8}$/;
 if (!phoneRegex.test(phone.replace(/\s/g, ''))) { showToast('❌ رقم الهاتف غير صحيح — مثال: 0555123456'); return; }
 if (name.length < 3) { showToast('❌ الاسم قصير جداً'); return; }    const total = p.price * orderQty;
     await db.from('orders').insert({ product_id:p.id, product_name:p.name, customer_name:name, phone, wilaya, color, size, quantity:orderQty, notes:notes||null, status:'new', created_at:new Date().toISOString() });
@@ -819,9 +859,56 @@ async function init() {
     $('productCat').textContent = catName(product.category)||'براسليات';
     $('productTitle').textContent = product.name;
     $('productPrice').innerHTML = `${Number(product.price).toLocaleString()} <small>دج</small>`;
-    $('productDesc').textContent = product.description||'منتج يدوي مميز مصنوع بحب واهتمام بالتفاصيل.';
-    const tagList = [catName(product.category), product.featured?'مميز':null,'يدوي','فاخر'].filter(Boolean);
+// ✅ الجديد - يعرض الوصف التفصيلي إذا الوصف المختصر فارغ
+const descToShow = product.description_full || product.description || '';
+$('productDesc').textContent = descToShow;
+$('productDesc').style.display = descToShow ? '' : 'none';    const tagList = [catName(product.category), product.featured?'مميز':null,'يدوي','فاخر'].filter(Boolean);
     $('productTags').innerHTML = tagList.map(t=>`<span class="tag">${t}</span>`).join('');
+    // عرض الألوان المتاحة
+const COLOR_NAMES = {
+    pink:'وردي', rose:'روز', purple:'بنفسجي', blue:'أزرق',
+    white:'أبيض', gold:'ذهبي', silver:'فضي', green:'أخضر',
+    black:'أسود', orange:'برتقالي', turquoise:'فيروزي', multicolor:'ملون'
+};
+const COLOR_HEX = {
+    pink:'#F4A7B9', rose:'#C2445A', purple:'#9B59B6', blue:'#5DADE2',
+    white:'#F7F7F7', gold:'#D4AC0D', silver:'#BDC3C7', green:'#1ABC9C',
+    black:'#2C3E50', orange:'#E67E22', turquoise:'#48C9B0',
+    multicolor:'conic-gradient(#F4A7B9,#9B59B6,#5DADE2,#1ABC9C,#F4A7B9)'
+};
+
+// عرض الألوان
+if (product.colors && product.colors.length) {
+    const colorsHTML = `
+        <div style="margin-bottom:20px;">
+            <div class="desc-label">الألوان المتاحة</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;">
+                ${product.colors.map(c => `
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+                        <div style="width:36px;height:36px;border-radius:50%;background:${COLOR_HEX[c]||'#ccc'};border:2px solid #E8DDD6;box-shadow:0 2px 6px rgba(0,0,0,0.1);"></div>
+                        <span style="font-size:0.62rem;color:#6B5B52;font-family:'Cairo',sans-serif;">${COLOR_NAMES[c]||c}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>`;
+    $('productTags').insertAdjacentHTML('afterend', colorsHTML);
+}
+
+// عرض المقاسات
+if (product.sizes && product.sizes.length) {
+    const sizesHTML = `
+        <div style="margin-bottom:20px;">
+            <div class="desc-label">المقاسات المتاحة</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                ${product.sizes.map(s => `
+                    <span style="padding:6px 16px;border:1.5px solid #E8DDD6;border-radius:30px;font-size:0.78rem;font-weight:600;color:#6B5B52;font-family:'Cairo',sans-serif;background:#FAF7F4;">
+                        ${s}
+                    </span>
+                `).join('')}
+            </div>
+        </div>`;
+    $('productTags').insertAdjacentHTML('afterend', sizesHTML);
+}
     document.title = `${product.name} — lodybracelets`;
     document.querySelector('meta[name="description"]').content = product.description||'براسليات يدوية فاخرة';
     if (images[0]) $('ogImage').content = images[0];
@@ -840,6 +927,69 @@ async function init() {
 
 document.addEventListener('keydown', e => { if (e.key==='Escape') closeOrder(); });
 init();
+// ===== COLOR PICKER =====
+const COLOR_MAP_ORDER = {
+    pink:  { hex:'#F4A7B9', name:'وردي' },
+    rose:  { hex:'#C2445A', name:'روز' },
+    purple:{ hex:'#9B59B6', name:'بنفسجي' },
+    blue:  { hex:'#5DADE2', name:'أزرق' },
+    white: { hex:'#F7F7F7', name:'أبيض' },
+    gold:  { hex:'#D4AC0D', name:'ذهبي' },
+    silver:{ hex:'#BDC3C7', name:'فضي' },
+    green: { hex:'#1ABC9C', name:'أخضر' },
+    black: { hex:'#2C3E50', name:'أسود' },
+    orange:{ hex:'#E67E22', name:'برتقالي' },
+    turquoise:{ hex:'#48C9B0', name:'فيروزي' },
+    multicolor:{ hex:'conic-gradient(#F4A7B9,#9B59B6,#5DADE2,#1ABC9C,#F4A7B9)', name:'ملون' }
+};
+
+function buildColorPicker(colors) {
+    const wrap = document.getElementById('colorPickerWrap');
+    const input = document.getElementById('oColor');
+    const label = document.getElementById('colorSelectedLabel');
+    if (!wrap) return;
+
+    // لو مافيش ألوان محددة للمنتج — نعرض كلهم
+    const toShow = (colors && colors.length) ? colors : Object.keys(COLOR_MAP_ORDER);
+
+    wrap.innerHTML = toShow.map(c => {
+        const info = COLOR_MAP_ORDER[c] || { hex:'#ccc', name:c };
+        return `
+            <div class="color-pick-btn" data-color="${c}" data-name="${info.name}"
+                title="${info.name}"
+                style="width:38px;height:38px;border-radius:50%;
+                background:${info.hex};
+                border:2.5px solid transparent;
+                cursor:pointer;position:relative;
+                transition:all .2s;box-shadow:0 2px 6px rgba(0,0,0,0.1);
+                flex-shrink:0;">
+            </div>`;
+    }).join('');
+
+    wrap.querySelectorAll('.color-pick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            // إلغاء تحديد الكل
+            wrap.querySelectorAll('.color-pick-btn').forEach(b => {
+                b.style.border = '2.5px solid transparent';
+                b.style.transform = 'scale(1)';
+                b.innerHTML = '';
+            });
+            // تحديد المختار
+            btn.style.border = '2.5px solid var(--gold)';
+            btn.style.transform = 'scale(1.15)';
+            btn.style.boxShadow = '0 0 0 3px rgba(196,137,90,0.25)';
+            btn.innerHTML = `<span style="position:absolute;inset:0;display:flex;
+                align-items:center;justify-content:center;
+                font-size:.75rem;color:white;font-weight:700;
+                text-shadow:0 1px 3px rgba(0,0,0,0.5);">✓</span>`;
+
+            input.value = btn.dataset.name;
+            label.textContent = `✓ اخترتِ: ${btn.dataset.name}`;
+            label.style.color = 'var(--gold-deep)';
+        });
+    });
+}
+// ===== END COLOR PICKER =====
 </script>
 </body>
 </html>
