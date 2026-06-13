@@ -847,30 +847,28 @@ window.location.href = `thankyou.html?product=${encodeURIComponent(p.name)}&name
 
 // Related
 async function loadRelated(product) {
+    const { data: allProducts } = await db.from('products').select('*').neq('id', product.id).limit(20);
+    if (!allProducts?.length) { $('relatedSection').style.display = 'none'; return; }
+
     const catNormalize = { summer:'صيفي', gift:'هدايا', custom:'مخصص', classic:'كلاسيك', modern:'عصري', gold:'ذهبي', silver:'فضي' };
-    const normalizedCat = catNormalize[product.category?.trim()] || product.category?.trim();
+    const currentCat = catNormalize[product.category?.trim()] || product.category?.trim();
 
-    const { data: sameCat } = await db.from('products').select('*').neq('id', product.id).limit(8);
-
-    const related = sameCat?.filter(p => {
+    const sameCat = allProducts.filter(p => {
         const pCat = catNormalize[p.category?.trim()] || p.category?.trim();
-        return pCat === normalizedCat;
+        return pCat === currentCat;
     }).slice(0, 4);
 
-    const finalRelated = related?.length ? related : (sameCat?.slice(0, 4) || []);
+    if (!sameCat.length) { $('relatedSection').style.display = 'none'; return; }
 
-    if (!finalRelated.length) { $('relatedSection').style.display = 'none'; return; }
-
-    $('relatedGrid').innerHTML = finalRelated.map(p => {
+    $('relatedGrid').innerHTML = sameCat.map(p => {
         const img = p.images?.[0] || p.image || '';
         return `<a class="related-card" href="product.html?id=${p.id}">
-            <div class="related-img">${img ? `<img src="${img}" alt="${esc(p.name)}" loading="lazy">` : ''}
-            </div>
+            <div class="related-img">${img ? `<img src="${img}" alt="${esc(p.name)}" loading="lazy">` : ''}</div>
             <div class="related-info">
-<div class="related-cat">${esc(catName(p.category))}</div>
-<div class="related-name">${esc(p.name)}</div>
-<div class="related-price">${Number(p.price).toLocaleString()} <small>دج</small></div>
-</div>          </div>
+                <div class="related-cat">${esc(catName(p.category))}</div>
+                <div class="related-name">${esc(p.name)}</div>
+                <div class="related-price">${Number(p.price).toLocaleString()} <small>دج</small></div>
+            </div>
         </a>`;
     }).join('');
 }
