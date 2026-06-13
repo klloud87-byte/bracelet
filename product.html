@@ -486,12 +486,16 @@ body { font-family: 'Cairo', sans-serif; background: var(--cream); color: var(--
 </div>     
             <div><label class="order-label">📏 المقاس</label><input type="text" class="order-input" id="oSize" required placeholder="16، 18، 20سم"></div>
                 </div>
-                <div class="order-field"><label class="order-label">🔢 الكمية</label>
-                    <div class="qty-control">
-                        <button type="button" class="qty-btn" id="qtyMinus">−</button>
-                        <span id="orderQtyVal">1</span>
-                        <button type="button" class="qty-btn" id="qtyPlus">+</button>
-                    </div>
+               <div class="order-field"><label class="order-label">🔢 الكمية</label>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div class="qty-control">
+            <button type="button" class="qty-btn" id="qtyMinus">−</button>
+            <span id="orderQtyVal">1</span>
+            <button type="button" class="qty-btn" id="qtyPlus">+</button>
+        </div>
+        <div id="orderTotal" style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--burgundy);"></div>
+    </div>
+</div>
                 </div>
                 <div class="order-field">
     <label class="order-label">⏱️ وقت التصنيع</label>
@@ -786,14 +790,20 @@ function openOrder(product) {
     $('orderProdName').textContent = product.name;
     $('orderProdPrice').innerHTML = `${Number(product.price).toLocaleString()} <small>دج</small>`;
     orderQty = 1; $('orderQtyVal').textContent = '1';
+    updateTotal();
 $('oColor').value = '';
     $('orderOverlay').classList.add('open'); document.body.style.overflow = 'hidden';
 }
 function closeOrder() { $('orderOverlay').classList.remove('open'); document.body.style.overflow = ''; }
 $('orderClose').addEventListener('click', closeOrder);
 $('orderOverlay').addEventListener('click', e => { if (e.target===$('orderOverlay')) closeOrder(); });
-$('qtyMinus').addEventListener('click', () => { if (orderQty>1) { orderQty--; $('orderQtyVal').textContent = orderQty; }});
-$('qtyPlus').addEventListener('click', () => { if (orderQty<20) { orderQty++; $('orderQtyVal').textContent = orderQty; }});
+function updateTotal() {
+    if (!currentProduct) return;
+    const total = currentProduct.price * orderQty;
+    $('orderTotal').innerHTML = `${Number(total).toLocaleString()} <span style="font-size:.75rem;font-weight:400;color:var(--text-light);font-family:'Cairo',sans-serif;">دج</span>`;
+}
+$('qtyMinus').addEventListener('click', () => { if (orderQty>1) { orderQty--; $('orderQtyVal').textContent = orderQty; updateTotal(); }});
+$('qtyPlus').addEventListener('click', () => { if (orderQty<20) { orderQty++; $('orderQtyVal').textContent = orderQty; updateTotal(); }});
 $('orderForm').addEventListener('submit', async e => {
     e.preventDefault();
     const p = currentProduct;
