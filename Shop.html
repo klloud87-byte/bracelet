@@ -13,9 +13,22 @@
   <meta property="og:type" content="website">
   <title>المتجر — lodybracelets</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Amiri:ital,wght@0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- ⚡ Preconnect: يقلل وقت الاتصال بالمصادر الخارجية -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://smvohvenbeofglstenrw.supabase.co">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
+  <!-- ⚡ Fonts: display=swap يمنع FOIT (وميض النص غير المرئي) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Amiri:wght@700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- ⚡ Font Awesome: تحميل بدون تأخير الـ render -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
+
+  <!-- ⚡ Supabase: defer يمنع blocking للـ HTML parser -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23B57C6C;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23D4A574;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Ctext x='50' y='72' font-size='52' text-anchor='middle' fill='white' font-family='Georgia, serif' font-weight='bold'%3EL%3C/text%3E%3C/svg%3E">
 
 <style>
@@ -572,9 +585,27 @@ input[type="range"].price-slider::-webkit-slider-thumb:hover { transform: scale(
 }
 .btn-empty-reset:hover { transform: translateY(-2px); box-shadow: var(--shadow-gold); }
 
-/* ═══════════════════════════════
-   SKELETON LOADING
-═══════════════════════════════ */
+/* ⚡ Image loading: placeholder رمادي حتى تتحمل الصورة */
+.product-image img {
+  background: linear-gradient(90deg,#EDE5DC 25%,#E0D5CA 50%,#EDE5DC 75%);
+  background-size: 400px 100%;
+  animation: imgShimmer 1.2s infinite linear;
+}
+.product-image img.loaded,
+.product-image img[src=""] {
+  animation: none;
+  background: none;
+}
+@keyframes imgShimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+/* ⚡ Smooth image fade-in عند التحميل */
+.product-image img {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.product-image img.loaded { opacity: 1; }
 @keyframes shimmer {
   0% { background-position: -700px 0; }
   100% { background-position: 700px 0; }
@@ -1119,6 +1150,23 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const WA_NUMBER = '213556486243';
 const ITEMS_PER_PAGE = 12;
 
+// ⚡ Cache: نخزن المنتجات 5 دقائق باش ما نعملوش fetch في كل مرة
+const CACHE_KEY = 'lody_products_cache';
+const CACHE_TTL = 5 * 60 * 1000; // 5 دقائق بالـ ms
+
+function getCachedProducts() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem(CACHE_KEY); return null; }
+    return data;
+  } catch { return null; }
+}
+function setCachedProducts(data) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch {}
+}
+
 const COLOR_MAP = {
   pink:{hex:'#F4A7B9',name:'وردي'},rose:{hex:'#C2445A',name:'روز'},
   purple:{hex:'#9B59B6',name:'بنفسجي'},blue:{hex:'#5DADE2',name:'أزرق'},
@@ -1138,6 +1186,12 @@ function esc(s){if(!s)return'';return String(s).replace(/[&<>"']/g,m=>({'&':'&am
 function catName(c){return c?CAT_MAP[c?.trim()]||c:'';}
 function $(id){return document.getElementById(id);}
 function showToast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ⚡ Debounce: نمنع renderGrid من الانطلاق في كل ضغطة حرف
+function debounce(fn, delay = 280) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
+}
 
 /* ─── WISHLIST (localStorage) ─────────────────────────── */
 function loadWishlist(){try{wishlist=JSON.parse(localStorage.getItem('lody_wishlist')||'[]');}catch{wishlist=[];}updateWishlistUI();}
@@ -1230,16 +1284,25 @@ function updateActiveFiltersBar(){
 
 /* ─── DATA ────────────────────────────────────────────── */
 async function loadProducts(){
+  // ⚡ نجربو الـ cache أولاً — إذا موجود نرجعو فوراً
+  const cached = getCachedProducts();
+  if (cached) return cached;
+
   const {data,error}=await db.from('products').select('*').eq('visible',true).order('created_at',{ascending:false});
-  return error?[]:data||[];
+  const result = error ? [] : data || [];
+
+  // ⚡ نخزنو في الـ cache
+  if (result.length) setCachedProducts(result);
+  return result;
 }
 async function loadBannerStats(){
-  const [{data:prods},{data:orders}]=await Promise.all([
-    db.from('products').select('id',{count:'exact',head:true}),
-    db.from('orders').select('id',{count:'exact',head:true}).eq('status','done')
-  ]);
-  if($('bannerProdCount'))$('bannerProdCount').textContent=prods?.length||allProducts.length||'0';
-  if($('bannerOrderCount'))$('bannerOrderCount').textContent=orders?.length||'0';
+  // ⚡ نحسبو من allProducts مباشرة بدل request جديد
+  const prodCount = allProducts.length;
+  if($('bannerProdCount')) $('bannerProdCount').textContent = prodCount;
+
+  // فقط عدد الطلبات يحتاج request
+  const {count} = await db.from('orders').select('id', {count:'exact',head:true}).eq('status','done');
+  if($('bannerOrderCount')) $('bannerOrderCount').textContent = count || '0';
 }
 
 /* ─── FILTER + SORT ───────────────────────────────────── */
@@ -1345,10 +1408,21 @@ function renderGrid(){
     const img=p.images?.[0]||p.image||'';
     const inWL=wishlist.some(w=>w.id===p.id);
     const colors=(p.colors||[]).slice(0,5);
+
+    // ⚡ أول 4 صور: fetchpriority=high + eager (فوق الطيّة غالباً)
+    // باقي الصور: lazy loading
+    const isEager = idx < 4;
+    const imgAttrs = isEager
+      ? `loading="eager" fetchpriority="high"`
+      : `loading="lazy" fetchpriority="low"`;
+
     return `
-      <div class="product-card" data-id="${esc(p.id)}" style="transition-delay:${idx*40}ms;">
+      <div class="product-card" data-id="${esc(p.id)}" style="transition-delay:${Math.min(idx,6)*40}ms;">
         <div class="product-image">
-          ${img?`<img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'">`:`<div class="img-fallback"><i class="fas fa-gem"></i></div>`}
+          ${img
+            ? `<img src="${esc(img)}" alt="${esc(p.name)}" ${imgAttrs} decoding="async" onerror="this.style.display='none'">`
+            : `<div class="img-fallback"><i class="fas fa-gem"></i></div>`
+          }
           ${p.featured?'<div class="product-badge">⭐ مميز</div>':''}
           <button class="card-wishlist-btn ${inWL?'in-wishlist':''}" data-id="${esc(p.id)}" title="${inWL?'إزالة من المفضلة':'إضافة للمفضلة'}">
             <i class="${inWL?'fas':'far'} fa-heart"></i>
@@ -1368,7 +1442,19 @@ function renderGrid(){
         </div>
       </div>`;
   }).join('');
-  requestAnimationFrame(()=>grid.querySelectorAll('.product-card').forEach(card=>requestAnimationFrame(()=>card.classList.add('visible'))));
+
+  // ⚡ Intersection Observer: animation فقط لما الكرت يدخل الشاشة
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05, rootMargin: '0px 0px 80px 0px' });
+
+  grid.querySelectorAll('.product-card').forEach(card => observer.observe(card));
+
   grid.querySelectorAll('.product-card').forEach(card=>{
     const id=card.dataset.id;
     const product=allProducts.find(p=>p.id===id);
@@ -1455,10 +1541,24 @@ function applyUrlParams(){
 }
 
 /* ─── EVENTS ──────────────────────────────────────────── */
-$('searchInput').addEventListener('input',e=>{currentSearch=e.target.value;currentPage=1;renderGrid();updateActiveFiltersBar();});
+// ⚡ Debounce: البحث ينتظر 280ms بعد آخر ضغطة قبل ما يبدأ الفلترة
+const debouncedSearch = debounce(val => {
+  currentSearch = val; currentPage = 1; renderGrid(); updateActiveFiltersBar();
+});
+$('searchInput').addEventListener('input', e => debouncedSearch(e.target.value));
+
 $('sortSelect').addEventListener('change',e=>{currentSort=e.target.value;currentPage=1;renderGrid();});
 $('sortSelectMobile').addEventListener('change',e=>{currentSort=e.target.value;currentPage=1;renderGrid();});
-$('priceRange').addEventListener('input',e=>{maxPrice=+e.target.value;$('priceRangeVal').textContent=maxPrice.toLocaleString();updateSliderTrack();currentPage=1;renderGrid();updateActiveFiltersBar();});
+
+// ⚡ Debounce: الـ slider ما يعيدش الرسم في كل pixel
+const debouncedPrice = debounce(val => {
+  maxPrice = +val; currentPage = 1; renderGrid(); updateActiveFiltersBar();
+}, 150);
+$('priceRange').addEventListener('input',e=>{
+  $('priceRangeVal').textContent=Number(e.target.value).toLocaleString();
+  updateSliderTrack();
+  debouncedPrice(e.target.value);
+});
 $('resetFilters').addEventListener('click',resetAll);
 $('btnClearAllFilters').addEventListener('click',resetAll);
 $('viewGrid').addEventListener('click',()=>{currentView='grid';$('productsGrid').classList.remove('view-list');$('viewGrid').classList.add('active');$('viewList').classList.remove('active');});
@@ -1471,8 +1571,34 @@ window.addEventListener('scroll',()=>{$('siteHeader').classList.toggle('scrolled
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeQuickView();$('wishlistPanel').classList.remove('open');$('wishlistOverlay').classList.remove('open');}});
 
 /* ─── INIT ────────────────────────────────────────────── */
+// ⚡ Image fade-in: نضيف .loaded لما كل صورة تتحمل
+document.addEventListener('load', e => {
+  if (e.target.tagName === 'IMG') e.target.classList.add('loaded');
+}, true);
+
 async function init(){
-  showSkeletons();loadWishlist();loadRecentlyViewed();updateSliderTrack();
+  loadWishlist();loadRecentlyViewed();updateSliderTrack();
+
+  // ⚡ Stale-While-Revalidate: نعرض الـ cache فوراً وبعدين نحدّث في الخلفية
+  const cached = getCachedProducts();
+  if (cached && cached.length) {
+    allProducts = cached;
+    buildCategories(); buildMobileChips(); buildColorFilters();
+    applyUrlParams(); renderGrid(); updateActiveFiltersBar();
+    // نحدّث في الخلفية بدون ما نأثر على الـ UX
+    loadProducts().then(fresh => {
+      if (JSON.stringify(fresh) !== JSON.stringify(cached)) {
+        allProducts = fresh;
+        buildCategories(); buildMobileChips(); buildColorFilters();
+        renderGrid();
+      }
+      loadBannerStats();
+    });
+    return;
+  }
+
+  // أول مرة: نعرض skeleton وننتظر البيانات
+  showSkeletons();
   allProducts=await loadProducts();
   if(!allProducts.length){$('productsGrid').innerHTML=`<div class="empty-state"><div class="empty-icon-wrap">📿</div><h3>لا توجد منتجات حتى الآن</h3><p>سيتم إضافة منتجات قريباً، تواصلي معنا للطلبات المخصصة</p></div>`;return;}
   buildCategories();buildMobileChips();buildColorFilters();applyUrlParams();renderGrid();updateActiveFiltersBar();
