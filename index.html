@@ -1756,8 +1756,26 @@
                 <button id="clearSearch" class="search-clear"><i class="fas fa-times-circle"></i></button>
             </div>
             <div class="products-grid animate-fade-up delay-2" id="productsGrid"></div>
-            <div id="pagination" class="pagination"></div>
-            <div id="paginationInfo" class="pagination-info"></div>
+            <div style="text-align:center;margin-top:48px;">
+                <a href="Shop.html" style="
+                    display:inline-flex;align-items:center;gap:12px;
+                    background:linear-gradient(135deg,var(--gold),var(--gold-deep));
+                    color:white;text-decoration:none;
+                    padding:15px 40px;border-radius:60px;
+                    font-size:.9rem;font-weight:700;
+                    font-family:'Cairo',sans-serif;
+                    letter-spacing:.05em;
+                    box-shadow:0 8px 28px rgba(196,137,90,0.35);
+                    transition:all .3s;"
+                    onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 14px 36px rgba(196,137,90,0.45)'"
+                    onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 28px rgba(196,137,90,0.35)'">
+                    <span>عرض جميع المنتجات</span>
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <p style="margin-top:14px;font-size:.72rem;color:var(--text-light);font-family:'Cairo',sans-serif;">
+                    تصفحي تشكيلتنا الكاملة في المتجر
+                </p>
+            </div>
         </div>
     </section>
 
@@ -2110,11 +2128,10 @@ async function renderProductsGrid() {
     if (totalFiltered === 0) {
         const grid = document.getElementById('productsGrid');
         if (grid) grid.innerHTML = `<div class="empty-products"><div style="font-size: 3rem; margin-bottom: 16px;">🔍</div><h3>لا توجد منتجات</h3><p>${currentSearch ? 'لا يوجد منتج يطابق بحثك' : 'لم يتم إضافة منتجات بعد'}</p></div>`;
-        renderPagination(0);
         return;
     }
-    const start = (currentPage - 1) * itemsPerPage;
-    const paginatedProducts = filtered.slice(start, start + itemsPerPage);
+    const start = 0;
+    const paginatedProducts = filtered.slice(0, itemsPerPage);
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
     grid.innerHTML = paginatedProducts.map(p => {
@@ -2151,8 +2168,6 @@ ${firstImage ? `<img src="${escapeHtml(firstImage)}" alt="${escapeHtml(p.name)}"
     window.location.href = `product.html?id=${card.dataset.id}`;
 });
     });
-   
-    renderPagination(totalFiltered);
 }
 
 async function renderProducts() {
